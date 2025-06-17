@@ -1,0 +1,32 @@
+Using RAG (Retrieval-Augmented Generation) to generate Jira tickets from uploaded API specs like Swagger, Figma, or prompts can be a very smart approach — but it depends on your goals.
+
+Let’s break down when it's a good fit and what to watch out for:
+
+✅ When RAG Is a Great Fit for Jira Story Generation
+Situation	Why RAG Helps
+Large API Specs	Embedding-based retrieval lets you fetch only the relevant parts of large Swagger/Figma files, instead of feeding the whole thing to the LLM.
+Different Sources	You may have Swagger, Figma, PRDs, and user prompts — RAG can unify context across formats.
+Dynamic Use Cases	Users can prompt for different features (e.g. “add refund API”), and RAG retrieves matching context.
+Token Limits	Avoids hitting context window limits of LLMs by narrowing the input.
+
+🟡 When RAG Might Be Overkill
+Situation	Why You Might Skip RAG
+Small input files	If the entire Swagger/Figma file is small, you can just pass it to the LLM directly.
+You already know the prompt scope	If each feature is predefined, hard-coded templates may be enough.
+You're not doing long-term reuse	RAG makes more sense if you’ll be querying specs often. For one-off uploads, just parsing and prompting might be simpler.
+
+🔍 Alternatives to Consider
+Approach	When to Use
+Parse + Template Prompting (no RAG)	If you're uploading a small Swagger spec and generating one ticket right away, you might skip vector search and directly parse + prompt.
+Chained Parsing → Prompting	You extract the relevant endpoints, then use the LLM to generate stories (with prompt engineering) without embeddings.
+Agentic Prompting	Let the agent inspect the API and ask follow-up questions — powerful, but more complex.
+
+✅ Summary
+Use Case	RAG Recommended?
+Generating stories for large or reused specs	✅ Yes
+User enters a prompt like “Add refund endpoint”	✅ Yes — use RAG to fetch relevant parts
+Parsing a 30-line Swagger to generate 1 ticket	❌ Not needed — prompt directly
+Wanting story traceability back to source lines	✅ RAG + source tracking helps here
+
+💡 Pro Tip
+You can also use RAG to build subtasks or acceptance criteria from different parts of the API spec — not just the endpoint description.
