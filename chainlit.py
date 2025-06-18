@@ -16,6 +16,27 @@ Use any provided documentation context and the user prompt to ensure the story i
 {"openapi":"3.0.0","info":{"title":"Wires API","version":"1.0.0","description":"API for initiating and managing wire transfers."},"paths":{"/wires":{"post":{"summary":"Initiate a new wire transfer","description":"Sends funds from a specified sender account to a receiver account at a given bank.","requestBody":{"description":"Details for the wire transfer","required":true,"content":{"application/json":{"schema":{"$ref":"#/components/schemas/WireTransferRequest"}}}},"responses":{"200":{"description":"Wire transfer initiated successfully","content":{"application/json":{"schema":{"$ref":"#/components/schemas/WireTransferResponse"}}}},"400":{"description":"Invalid request payload","content":{"application/json":{"schema":{"$ref":"#/components/schemas/Error"}}}},"500":{"description":"Internal server error","content":{"application/json":{"schema":{"$ref":"#/components/schemas/Error"}}}}}}}},"components":{"schemas":{"WireTransferRequest":{"type":"object","required":["amount","currency","senderAccount","receiverAccount","receiverBankRoutingNumber","receiverBankName"],"properties":{"amount":{"type":"number","format":"float","description":"The amount to be transferred.","minimum":0.01,"example":1000.5},"currency":{"type":"string","description":"The currency of the transfer (e.g., USD, EUR).","pattern":"^[A-Z]{3}$","minLength":3,"maxLength":3,"example":"USD"},"senderAccount":{"type":"string","description":"The account number from which funds will be sent.","minLength":5,"maxLength":20,"example":"1234567890"},"receiverAccount":{"type":"string","description":"The account number of the recipient.","minLength":5,"maxLength":20,"example":"0987654321"},"receiverBankRoutingNumber":{"type":"string","description":"The routing number of the receiver's bank (e.g., ABA/SWIFT).","minLength":6,"maxLength":11,"example":"121000358"},"receiverBankName":{"type":"string","description":"The name of the receiver's bank.","minLength":2,"maxLength":100,"example":"Bank of America"},"reference":{"type":"string","description":"Optional reference or memo for the transfer.","maxLength":140,"example":"Payment for services"}}},"WireTransferResponse":{"type":"object","properties":{"message":{"type":"string","description":"A confirmation message.","example":"Wire transfer successfully initiated."},"transactionId":{"type":"string","description":"Unique identifier for the initiated transaction.","example":"WT-123456789"},"status":{"type":"string","description":"The status of the wire transfer.","enum":["PENDING","COMPLETED","FAILED"],"example":"PENDING"}}},"Error":{"type":"object","properties":{"code":{"type":"string","description":"A unique error code.","example":"INVALID_AMOUNT"},"message":{"type":"string","description":"A human-readable error message.","example":"The amount provided is not valid."}}}}}}
 
 
+@cl.on_chat_start
+async def on_chat_start():
+    await cl.Message(content="Welcome! Ask about any contest.").send()
+    cl.user_session.set("chain", chain)
+
+@cl.on_message
+async def on_message(message: cl.Message):
+    chain = cl.user_session.get("chain")
+    res = await chain.acall(message.content)
+    # Format the result as JSON
+    json_result = json.dumps({
+        "answer": res["answer"],
+        "sources": [
+            {"content": doc.page_content, "metadata": doc.metadata}
+            for doc in res.get("source_documents", [])
+        ]
+    }, indent=2)
+    await cl.Message(content=f"``````").send()
+
+
+
 
 import chainlit as cl
 import requests
